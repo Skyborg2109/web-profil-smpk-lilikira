@@ -18,6 +18,7 @@ import {
     Loader2,
 } from 'lucide-react';
 import { showAlert } from '../../../utils/sweetalert';
+import { logActivity } from '../../../utils/logger';
 
 interface OrgMember {
     id: number;
@@ -113,11 +114,13 @@ export function OrgStructureManagementPage() {
                     .update(formData)
                     .eq('id', editingItem.id);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'UPDATE', 'Org Structure', `Memperbarui data pengurus ${formData.name} (${formData.position})`);
             } else {
                 const { error } = await supabase
                     .from('org_structure')
                     .insert([formData]);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'INSERT', 'Org Structure', `Menambah pengurus baru: ${formData.name} (${formData.position})`);
             }
             showAlert.success('Berhasil', 'Data pengurus telah disimpan.');
             setShowModal(false);
@@ -141,6 +144,7 @@ export function OrgStructureManagementPage() {
 
                 const { error } = await supabase.from('org_structure').delete().eq('id', item.id);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'DELETE', 'Org Structure', `Menghapus data pengurus ${item.name} (${item.position})`);
                 showAlert.success('Berhasil', 'Data pengurus telah dihapus.');
                 fetchData();
             } catch (error: any) {

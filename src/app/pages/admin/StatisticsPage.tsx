@@ -24,8 +24,7 @@ export function StatisticsPage() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    // Mock visitor statistics
-    const [stats] = useState({
+    const [stats, setStats] = useState({
         todayVisitors: 234,
         totalVisitors: 15847,
         activeUsers: 42,
@@ -36,48 +35,101 @@ export function StatisticsPage() {
         returningVisitors: 7613,
     });
 
-    const [visitorData] = useState([
-        { day: 'Sen', visitors: 145 },
-        { day: 'Sel', visitors: 189 },
-        { day: 'Rab', visitors: 234 },
-        { day: 'Kam', visitors: 198 },
-        { day: 'Jum', visitors: 267 },
-        { day: 'Sab', visitors: 156 },
-        { day: 'Min', visitors: 123 },
-    ]);
+    const [dbStats, setDbStats] = useState({
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalOrg: 0,
+        totalGallery: 0,
+    });
 
-    const [monthlyData] = useState([
-        { month: 'Jan', visitors: 4234, pageViews: 12456 },
-        { month: 'Feb', visitors: 5123, pageViews: 15234 },
-        { month: 'Mar', visitors: 4567, pageViews: 13567 },
-        { month: 'Apr', visitors: 5890, pageViews: 17234 },
-        { month: 'Mei', visitors: 6234, pageViews: 18456 },
-        { month: 'Jun', visitors: 5678, pageViews: 16789 },
-    ]);
-
-    const [topPages] = useState([
-        { page: 'Beranda', views: 5234, percentage: 35 },
-        { page: 'Profil Sekolah', views: 3456, percentage: 23 },
-        { page: 'Galeri', views: 2345, percentage: 16 },
-        { page: 'Berita', views: 1890, percentage: 13 },
-        { page: 'SPMB', views: 1234, percentage: 8 },
-        { page: 'Kontak', views: 756, percentage: 5 },
+    const [visitorData, setVisitorData] = useState([
+        { day: 'Sen', visitors: 0 },
+        { day: 'Sel', visitors: 0 },
+        { day: 'Rab', visitors: 0 },
+        { day: 'Kam', visitors: 0 },
+        { day: 'Jum', visitors: 0 },
+        { day: 'Sab', visitors: 0 },
+        { day: 'Min', visitors: 0 },
     ]);
 
     useEffect(() => {
         if (!user) {
             navigate('/admin/login');
+        } else {
+            fetchDbStats();
         }
     }, [user, navigate]);
+
+    const fetchDbStats = async () => {
+        try {
+            const { supabase } = await import('../../../lib/supabase');
+            const [
+                { count: studentsCount },
+                { count: teachersCount },
+                { count: orgCount },
+                { count: galleryCount },
+                { data: activityLog }
+            ] = await Promise.all([
+                supabase.from('students').select('*', { count: 'exact', head: true }),
+                supabase.from('teachers_staff').select('*', { count: 'exact', head: true }),
+                supabase.from('org_structure').select('*', { count: 'exact', head: true }),
+                supabase.from('gallery').select('*', { count: 'exact', head: true }),
+                supabase.from('activity_logs').select('created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+            ]);
+
+            const totalArticleViews = articles.reduce((sum, a) => sum + (a.views || 0), 0);
+
+            setStats(prev => ({
+                ...prev,
+                totalVisitors: totalArticleViews + (galleryCount || 0) * 5, // Simulated total reach
+                pageViews: totalArticleViews,
+                activeUsers: 1, // Current admin
+            }));
+
+            setDbStats({
+                totalStudents: studentsCount || 0,
+                totalTeachers: teachersCount || 0,
+                totalOrg: orgCount || 0,
+                totalGallery: galleryCount || 0,
+            });
+
+            // Process activity logs for the last 7 days
+            if (activityLog) {
+                const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+                const activityByDay: { [key: string]: number } = {};
+
+                // Initialize last 7 days
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    activityByDay[days[date.getDay()]] = 0;
+                }
+
+                activityLog.forEach(log => {
+                    const dayName = days[new Date(log.created_at).getDay()];
+                    if (activityByDay[dayName] !== undefined) {
+                        activityByDay[dayName]++;
+                    }
+                });
+
+                const formattedData = Object.entries(activityByDay).map(([day, count]) => ({
+                    day,
+                    visitors: count
+                }));
+                setVisitorData(formattedData);
+            }
+        } catch (error) {
+            console.error('Error fetching db stats:', error);
+        }
+    };
 
     const handleLogout = () => {
         logout();
         navigate('/admin/login');
     };
 
-    const totalViews = articles.reduce((sum, a) => sum + a.views, 0);
-    const maxVisitors = Math.max(...visitorData.map((d) => d.visitors));
-    const maxMonthlyVisitors = Math.max(...monthlyData.map((d) => d.visitors));
+    const totalViews = articles.reduce((sum, a) => sum + (a.views || 0), 0);
+    const maxVisitors = Math.max(...visitorData.map((d) => d.visitors), 1);
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -116,89 +168,160 @@ export function StatisticsPage() {
                     {/* Metrics Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">Hari Ini</p>
+                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">Total Siswa</p>
                             <div className="flex items-baseline gap-2">
-                                <h3 className="text-3xl font-black text-gray-900">{stats.todayVisitors}</h3>
-                                <span className="text-xs font-bold text-green-500">+12%</span>
+                                <h3 className="text-3xl font-black text-gray-900">{dbStats.totalStudents}</h3>
+                                <span className="text-xs font-bold text-blue-500">Aktif</span>
                             </div>
                         </div>
 
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                            <p className="text-xs font-black text-green-600 uppercase tracking-widest mb-2">Total Kunjungan</p>
-                            <h3 className="text-3xl font-black text-gray-900">{stats.totalVisitors.toLocaleString()}</h3>
+                            <p className="text-xs font-black text-green-600 uppercase tracking-widest mb-2">Guru & Staf</p>
+                            <h3 className="text-3xl font-black text-gray-900">{dbStats.totalTeachers}</h3>
                         </div>
 
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                            <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">Halaman Dilihat</p>
-                            <h3 className="text-3xl font-black text-gray-900">{stats.pageViews.toLocaleString()}</h3>
+                            <p className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">Media Terunggah</p>
+                            <h3 className="text-3xl font-black text-gray-900">{dbStats.totalGallery}</h3>
                         </div>
 
                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between">
-                            <p className="text-xs font-black text-purple-600 uppercase tracking-widest mb-2">Sesi Aktif</p>
+                            <p className="text-xs font-black text-purple-600 uppercase tracking-widest mb-2">Artikel Publik</p>
                             <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                <h3 className="text-3xl font-black text-gray-900">{stats.activeUsers}</h3>
+                                <h3 className="text-3xl font-black text-gray-900">{articles.length}</h3>
                             </div>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Weekly Chart */}
-                        <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                            <h3 className="text-lg font-black text-gray-900 mb-8 border-l-4 border-blue-600 pl-4 uppercase tracking-tight">Grafik Pengunjung Mingguan</h3>
-                            <div className="flex items-end justify-between gap-4 h-72">
-                                {visitorData.map((data, index) => (
-                                    <div key={index} className="flex-1 flex flex-col items-center gap-3 group">
-                                        <div className="w-full bg-gray-50 rounded-xl relative h-full flex items-end overflow-hidden border border-gray-100">
-                                            <div
-                                                className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-b-lg transition-all duration-500 group-hover:from-blue-700 group-hover:to-blue-500"
-                                                style={{ height: `${(data.visitors / maxVisitors) * 100}%` }}
-                                            />
-                                            <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {data.visitors}
+                        <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-gray-100 p-10">
+                            <div className="flex items-center justify-between mb-10">
+                                <div>
+                                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Tren Aktivitas Sistem</h3>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit Log 7 Hari Terakhir</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-blue-600 rounded-full shadow-lg shadow-blue-200" />
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aktual</span>
+                                    </div>
+                                    <button className="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-xl transition-all">
+                                        <TrendingUp className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="relative h-80 w-full group/chart">
+                                {/* Grid Background */}
+                                <div className="absolute inset-0 flex flex-col justify-between py-2 pointer-events-none">
+                                    {[1, 2, 3, 4].map((_, i) => (
+                                        <div key={i} className="w-full border-t border-slate-50 relative">
+                                            <span className="absolute -left-8 -top-2 text-[9px] font-black text-slate-300 uppercase">
+                                                {Math.round((maxVisitors / 4) * (4 - i))}
                                             </span>
                                         </div>
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{data.day}</span>
-                                    </div>
-                                ))}
+                                    ))}
+                                    <div className="w-full border-t border-slate-50" />
+                                </div>
+
+                                {/* Bars Container */}
+                                <div className="absolute inset-0 flex items-end justify-between gap-4 pt-10 px-2">
+                                    {visitorData.map((data, index) => {
+                                        const isToday = new Date().getDay() === ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].indexOf(data.day);
+                                        return (
+                                            <div key={index} className="flex-1 h-full flex flex-col items-center gap-4 group relative">
+                                                {/* Tooltip */}
+                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-xl text-[10px] font-black opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 z-20 pointer-events-none shadow-xl">
+                                                    {data.visitors} Aksi
+                                                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900" />
+                                                </div>
+
+                                                <div className="w-full relative flex-1 flex items-end">
+                                                    {/* The Bar */}
+                                                    <div
+                                                        className={`w-full max-w-[40px] mx-auto rounded-t-2xl relative transition-all duration-700 ease-out shadow-lg 
+                                                            ${isToday
+                                                                ? 'bg-gradient-to-t from-blue-700 to-indigo-500 shadow-blue-200'
+                                                                : 'bg-gradient-to-t from-slate-200 to-slate-100 group-hover:from-blue-600 group-hover:to-blue-400 group-hover:shadow-blue-100'
+                                                            }`}
+                                                        style={{ height: `${(data.visitors / maxVisitors) * 100}%` }}
+                                                    >
+                                                        {/* Glossy overlay */}
+                                                        <div className="absolute inset-0 bg-white/10 rounded-t-2xl pointer-events-none" />
+
+                                                        {/* Top indicator for Today */}
+                                                        {isToday && (
+                                                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-1 bg-blue-400 rounded-full blur-[2px] animate-pulse" />
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isToday ? 'text-blue-600' : 'text-slate-400 group-hover:text-blue-600'}`}>
+                                                    {data.day}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
 
                         {/* Side Metrics */}
-                        <div className="space-y-6">
-                            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                                <h3 className="text-sm font-black text-gray-900 mb-6 uppercase tracking-widest border-b pb-4">Retensi & Durasi</h3>
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-xs font-bold text-gray-400 uppercase">Rerata Durasi</p>
-                                        <p className="text-lg font-black text-blue-600">{stats.avgDuration}</p>
+                        <div className="space-y-6 lg:col-span-1">
+                            {/* Retention Card */}
+                            <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-gray-100 p-8">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="p-2 bg-blue-50 rounded-xl">
+                                        <Activity className="w-4 h-4 text-blue-600" />
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <p className="text-xs font-bold text-gray-400 uppercase">Bounce Rate</p>
-                                        <p className="text-lg font-black text-amber-600">{stats.bounceRate}</p>
+                                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Metrik Performa</h3>
+                                </div>
+
+                                <div className="space-y-8">
+                                    <div className="flex items-center justify-between group">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rerata Durasi</p>
+                                            <p className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">{stats.avgDuration}</p>
+                                        </div>
+                                        <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                            <div className="w-2/3 h-full bg-blue-600" />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between group">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pentalan (Bounce)</p>
+                                            <p className="text-xl font-black text-slate-900 group-hover:text-amber-600 transition-colors">{stats.bounceRate}</p>
+                                        </div>
+                                        <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
+                                            <div className="w-1/3 h-full bg-amber-500" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                                <h3 className="text-sm font-black text-gray-900 mb-6 uppercase tracking-widest border-b pb-4">Tipe Pengguna</h3>
+                            {/* User Type Card */}
+                            <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-gray-100 p-8">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-8 px-2">Karakteristik Pengguna</h3>
                                 <div className="space-y-6">
-                                    <div>
-                                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 mb-2">
-                                            <span>Pengguna Baru</span>
-                                            <span className="text-blue-600">52%</span>
+                                    <div className="p-4 bg-slate-50 rounded-3xl group">
+                                        <div className="flex justify-between items-end mb-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pengguna Baru</span>
+                                            <span className="text-sm font-black text-blue-600">52%</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                            <div className="bg-blue-600 h-full rounded-full" style={{ width: '52%' }} />
+                                        <div className="h-2 w-full bg-white rounded-full overflow-hidden p-0.5">
+                                            <div className="h-full bg-blue-600 rounded-full" style={{ width: '52%' }} />
                                         </div>
                                     </div>
-                                    <div>
-                                        <div className="flex justify-between text-[10px] font-black uppercase text-gray-400 mb-2">
-                                            <span>Pengguna Lama</span>
-                                            <span className="text-green-600">48%</span>
+
+                                    <div className="p-4 bg-slate-50 rounded-3xl group">
+                                        <div className="flex justify-between items-end mb-3">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pengguna Lama</span>
+                                            <span className="text-sm font-black text-indigo-600">48%</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                            <div className="bg-green-500 h-full rounded-full" style={{ width: '48%' }} />
+                                        <div className="h-2 w-full bg-white rounded-full overflow-hidden p-0.5">
+                                            <div className="h-full bg-indigo-600 rounded-full" style={{ width: '48%' }} />
                                         </div>
                                     </div>
                                 </div>

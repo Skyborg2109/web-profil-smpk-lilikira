@@ -19,6 +19,7 @@ import {
     Loader2,
 } from 'lucide-react';
 import { showAlert } from '../../../utils/sweetalert';
+import { logActivity } from '../../../utils/logger';
 
 interface TeacherStaff {
     id: number;
@@ -120,11 +121,13 @@ export function TeacherStaffManagementPage() {
                     .update(formData)
                     .eq('id', editingItem.id);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'UPDATE', 'Teacher/Staff', `Memperbarui data ${formData.full_name} (${formData.position})`);
             } else {
                 const { error } = await supabase
                     .from('teachers_staff')
                     .insert([formData]);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'INSERT', 'Teacher/Staff', `Menambah data ${formData.full_name} sebagai ${formData.position}`);
             }
             showAlert.success('Berhasil', 'Data telah disimpan.');
             setShowModal(false);
@@ -148,6 +151,7 @@ export function TeacherStaffManagementPage() {
 
                 const { error } = await supabase.from('teachers_staff').delete().eq('id', item.id);
                 if (error) throw error;
+                await logActivity(user?.name || 'Admin', 'DELETE', 'Teacher/Staff', `Menghapus data ${item.full_name} (${item.position})`);
                 showAlert.success('Berhasil', 'Data telah dihapus.');
                 fetchData();
             } catch (error: any) {

@@ -5,6 +5,7 @@ import { useNews } from '../../contexts/NewsContext';
 import { useSPMB } from '../../contexts/SPMBContext';
 import { useVideos } from '../../contexts/VideoContext';
 import { AdminSidebar } from '../../components/AdminSidebar';
+import { supabase } from '../../../lib/supabase';
 import {
     Users,
     Eye,
@@ -20,6 +21,9 @@ import {
     LayoutDashboard,
     Menu,
     Video,
+    UserCheck,
+    Briefcase,
+    Image as ImageIcon,
 } from 'lucide-react';
 
 export function DashboardPage() {
@@ -30,19 +34,52 @@ export function DashboardPage() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    // visitor statistics
-    const [stats] = useState({
+    const [stats, setStats] = useState({
         todayVisitors: 234,
         totalVisitors: 15847,
         activeUsers: 42,
         pageViews: 3421,
     });
 
+    const [dbStats, setDbStats] = useState({
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalOrg: 0,
+        totalGallery: 0,
+    });
+
     useEffect(() => {
         if (!authLoading && !user) {
             navigate('/admin/login');
+        } else if (user) {
+            fetchDbStats();
         }
     }, [user, authLoading, navigate]);
+
+    const fetchDbStats = async () => {
+        try {
+            const [
+                { count: studentsCount },
+                { count: teachersCount },
+                { count: orgCount },
+                { count: galleryCount }
+            ] = await Promise.all([
+                supabase.from('students').select('*', { count: 'exact', head: true }),
+                supabase.from('teachers_staff').select('*', { count: 'exact', head: true }),
+                supabase.from('org_structure').select('*', { count: 'exact', head: true }),
+                supabase.from('gallery').select('*', { count: 'exact', head: true }),
+            ]);
+
+            setDbStats({
+                totalStudents: studentsCount || 0,
+                totalTeachers: teachersCount || 0,
+                totalOrg: orgCount || 0,
+                totalGallery: galleryCount || 0,
+            });
+        } catch (error) {
+            console.error('Error fetching db stats:', error);
+        }
+    };
 
     if (authLoading) {
         return (
@@ -167,45 +204,45 @@ export function DashboardPage() {
                             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 text-blue-600">
                                 <Users className="w-5 h-5 lg:w-6 lg:h-6" />
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pengunjung</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Siswa</p>
                             <div className="flex items-baseline gap-2">
-                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{stats.todayVisitors}</h3>
-                                <div className="flex items-center text-[10px] font-bold text-green-500">
-                                    <TrendingUp className="w-3 h-3 mr-1" /> 12%
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{dbStats.totalStudents}</h3>
+                                <div className="flex items-center text-[10px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">
+                                    Aktif
                                 </div>
                             </div>
                         </div>
 
                         <div className="bg-white p-5 lg:p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-50 rounded-2xl flex items-center justify-center mb-4 text-green-600">
-                                <ClipboardList className="w-5 h-5 lg:w-6 lg:h-6" />
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 text-emerald-600">
+                                <UserCheck className="w-5 h-5 lg:w-6 lg:h-6" />
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pendaftaran</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Guru & Staf</p>
                             <div className="flex items-baseline gap-2">
-                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{pendingSPMB}</h3>
-                                <span className="text-[9px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full uppercase">Pending</span>
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{dbStats.totalTeachers}</h3>
+                                <span className="text-[9px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase">Personel</span>
                             </div>
                         </div>
 
                         <div className="bg-white p-5 lg:p-6 rounded-3xl border border-slate-200 shadow-sm">
                             <div className="w-10 h-10 lg:w-12 lg:h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-4 text-amber-600">
-                                <FileText className="w-5 h-5 lg:w-6 lg:h-6" />
+                                <Briefcase className="w-5 h-5 lg:w-6 lg:h-6" />
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Artikel</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Struktur Org</p>
                             <div className="flex items-baseline gap-2">
-                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{articles.length}</h3>
-                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{publishedArticles} Live</p>
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{dbStats.totalOrg}</h3>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Kepengurusan</p>
                             </div>
                         </div>
 
                         <div className="bg-white p-5 lg:p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-4 text-purple-600">
-                                <Activity className="w-5 h-5 lg:w-6 lg:h-6" />
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600">
+                                <ImageIcon className="w-5 h-5 lg:w-6 lg:h-6" />
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Server</p>
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">Stable</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Galeri Foto</p>
+                            <div className="flex items-baseline gap-2">
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{dbStats.totalGallery}</h3>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Media Tersemat</p>
                             </div>
                         </div>
 
@@ -217,6 +254,17 @@ export function DashboardPage() {
                             <div className="flex items-baseline gap-2">
                                 <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{videos.length}</h3>
                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Youtube Links</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 lg:p-6 rounded-3xl border border-slate-200 shadow-sm">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-50 rounded-2xl flex items-center justify-center mb-4 text-red-600">
+                                <ClipboardList className="w-5 h-5 lg:w-6 lg:h-6" />
+                            </div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pendaftaran SPMB</p>
+                            <div className="flex items-baseline gap-2">
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{applications.length}</h3>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{pendingSPMB} Pending</p>
                             </div>
                         </div>
                     </div>

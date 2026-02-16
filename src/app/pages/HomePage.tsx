@@ -231,16 +231,6 @@ export function HomePage() {
                   );
                 })()}
               </div>
-
-              <div className="mt-12 pt-8 border-t-2 border-slate-50 flex items-center gap-6">
-                <div className="p-3 bg-blue-50 rounded-2xl border border-blue-100">
-                  <img src="/LogoSekolah.png" className="w-12 h-12 object-contain" alt="Logo Sekolah" />
-                </div>
-                <div>
-                  <p className="font-black text-blue-900 mb-1 text-2xl tracking-tight">Remigius Dele S.Pd</p>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Kepala Sekolah SMPK Renya Rosari</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ import {
     Camera
 } from 'lucide-react';
 import { showAlert } from '../../../utils/sweetalert';
+import { logActivity } from '../../../utils/logger';
 
 export function ContentManagementPage() {
     const { user, logout } = useAuth();
@@ -152,6 +153,7 @@ export function ContentManagementPage() {
                         : currentSection?.title));
 
             await updateContent(selectedSection, contentToSave, sectionTitle);
+            await logActivity(user?.name || 'Admin', 'UPDATE', 'Content/Profile', `Memperbarui bagian: ${sectionTitle}`);
             showAlert.success('Berhasil', 'Perubahan telah disimpan.');
             setIsEditing(false);
         } catch (error: any) {
