@@ -125,8 +125,13 @@ export function UserProfilePage() {
             <div className="max-w-5xl mx-auto px-4 lg:px-8">
                 {/* Hero Profile Section */}
                 <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/60 overflow-hidden mb-8 border border-slate-100 relative">
-                    <div className="h-48 bg-gradient-to-r from-blue-600 to-indigo-700 relative">
-                        <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] pointer-events-none" />
+                    <div className="h-48 relative overflow-hidden">
+                        <img
+                            src="/Foto Depan Kantor.jpeg"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            alt="Background Profile"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-indigo-900/40 backdrop-blur-[1px] pointer-events-none" />
                     </div>
 
                     <div className="px-8 pb-8 relative">
