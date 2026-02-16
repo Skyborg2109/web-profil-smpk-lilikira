@@ -11,8 +11,8 @@ export function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // View state: 'login' or 'register'
-    const [view, setView] = useState<'login' | 'register'>('login');
+    // View state: 'login', 'register', 'forgot-password', or 'reset-password'
+    const [view, setView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
     const [successMessage, setSuccessMessage] = useState('');
 
     // Password visibility states
@@ -37,9 +37,14 @@ export function LoginPage() {
             params.get('token');
 
         if (isActivation) {
-            setSuccessMessage('Akun Anda berhasil diverifikasi. Silakan login sekarang.');
-            // Clear hash and params to prevent re-triggering
-            window.history.replaceState(null, '', window.location.pathname);
+            if (hash.includes('type=recovery') || params.get('type') === 'recovery') {
+                setView('reset-password');
+                setSuccessMessage('Token pemulihan terdeteksi. Silakan masukkan kata sandi baru Anda.');
+            } else {
+                setSuccessMessage('Akun Anda berhasil diverifikasi. Silakan login sekarang.');
+            }
+            // Clear hash and params to prevent re-triggering? Actually for recovery we might need the token in the session if not handled by Supabase automatically, but usually Supabase handles it.
+            // window.history.replaceState(null, '', window.location.pathname);
         }
     }, [location.pathname]);
 
@@ -188,13 +193,65 @@ export function LoginPage() {
         }
     };
 
-    const toggleView = (target: 'login' | 'register') => {
+    const [resetEmail, setResetEmail] = useState('');
+    const [resetLoading, setResetLoading] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!resetEmail) {
+            setError('Silakan masukkan email Anda.');
+            return;
+        }
+
+        setResetLoading(true);
+        setError('');
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                redirectTo: `${window.location.origin}/login`,
+            });
+            if (error) throw error;
+            setSuccessMessage('Link reset kata sandi telah dikirim ke email Anda.');
+            setResetEmail('');
+        } catch (err: any) {
+            setError(err.message || 'Gagal mengirim email reset.');
+        } finally {
+            setResetLoading(false);
+        }
+    };
+
+    const handleUpdatePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newPassword || newPassword.length < 6) {
+            setError('Kata sandi baru minimal 6 karakter.');
+            return;
+        }
+
+        setResetLoading(true);
+        setError('');
+        try {
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            showAlert.success('Berhasil', 'Kata sandi Anda telah diperbarui. Silakan login kembali.');
+            setView('login');
+            setSuccessMessage('Kata sandi berhasil diperbarui.');
+            setNewPassword('');
+            // Clear hash/params 
+            window.history.replaceState(null, '', window.location.pathname);
+        } catch (err: any) {
+            setError(err.message || 'Gagal memperbarui kata sandi.');
+        } finally {
+            setResetLoading(false);
+        }
+    };
+
+    const toggleView = (target: 'login' | 'register' | 'forgot-password' | 'reset-password') => {
         setView(target);
         setError('');
         setSuccessMessage('');
         setShowLoginPassword(false);
         setShowRegisterPassword(false);
-        window.history.pushState({}, '', `/${target}`);
+        window.history.pushState({}, '', target === 'login' || target === 'register' ? `/${target}` : window.location.pathname);
     };
 
     return (
@@ -208,19 +265,30 @@ export function LoginPage() {
             <div className="auth-orbit"></div>
 
             <div className="auth-card">
-                <div className="auth-hero">
-                    <img src="/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
-                    <div className={`auth-toggle ${view === 'login' ? 'login-active' : ''}`}>
-                        <button type="button" onClick={() => toggleView('login')}>
-                            <span> Login </span>
-                        </button>
-                        <button type="button" onClick={() => toggleView('register')}>
-                            <span> Sign Up</span>
-                        </button>
+                {(view === 'login' || view === 'register') && (
+                    <div className="auth-hero">
+                        <img src="/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
+                        <div className={`auth-toggle ${view === 'login' ? 'login-active' : ''}`}>
+                            <button type="button" onClick={() => toggleView('login')}>
+                                <span> Login </span>
+                            </button>
+                            <button type="button" onClick={() => toggleView('register')}>
+                                <span> Sign Up</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
-                <div className={`auth-forms ${view === 'register' ? 'view-register' : ''}`}>
+                {(view === 'forgot-password' || view === 'reset-password') && (
+                    <div className="auth-hero">
+                        <img src="/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
+                        <div className="auth-hero-title">
+                            <h3>{view === 'forgot-password' ? 'Pemulihan Akun' : 'Kata Sandi Baru'}</h3>
+                        </div>
+                    </div>
+                )}
+
+                <div className={`auth-forms ${view !== 'login' ? 'view-register' : ''}`}>
                     {/* Login Form */}
                     <form className={`auth-form login ${view === 'login' ? 'active' : ''}`} onSubmit={handleLogin}>
                         <h2>Selamat Datang Kembali!</h2>
@@ -265,10 +333,85 @@ export function LoginPage() {
                         </div>
                         {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
 
-                        <Link to="#" className="auth-link">Forgot password?</Link>
+                        <button type="button" className="auth-link" onClick={() => toggleView('forgot-password')}>Forgot password?</button>
 
                         <button type="submit" disabled={loginLoading}>
                             {loginLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Login'}
+                        </button>
+                    </form>
+
+                    {/* Forgot Password Form */}
+                    <form className={`auth-form forgot-password ${view === 'forgot-password' ? 'active' : ''}`} onSubmit={handleForgotPassword}>
+                        <h2>Lupa Kata Sandi?</h2>
+                        <p className="form-desc">Masukkan email Anda untuk menerima link pemulihan.</p>
+
+                        {successMessage && (
+                            <div className="auth-success">
+                                <div className="success-icon">✓</div>
+                                <div className="success-text">{successMessage}</div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="auth-error">{error}</div>
+                        )}
+
+                        <input
+                            type="email"
+                            placeholder="Alamat Email"
+                            value={resetEmail}
+                            onChange={(e) => {
+                                setResetEmail(e.target.value);
+                                setError('');
+                                setSuccessMessage('');
+                            }}
+                        />
+
+                        <button type="submit" disabled={resetLoading}>
+                            {resetLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Kirim Link'}
+                        </button>
+
+                        <button type="button" className="auth-link" onClick={() => toggleView('login')}>
+                            Kembali ke Login
+                        </button>
+                    </form>
+
+                    {/* Reset Password Form */}
+                    <form className={`auth-form reset-password ${view === 'reset-password' ? 'active' : ''}`} onSubmit={handleUpdatePassword}>
+                        <h2>Reset Kata Sandi</h2>
+
+                        {successMessage && (
+                            <div className="auth-success">
+                                <div className="success-icon">✓</div>
+                                <div className="success-text">{successMessage}</div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="auth-error">{error}</div>
+                        )}
+
+                        <div className="password-input-wrapper">
+                            <input
+                                type={showRegisterPassword ? "text" : "password"}
+                                placeholder="Kata Sandi Baru"
+                                value={newPassword}
+                                onChange={(e) => {
+                                    setNewPassword(e.target.value);
+                                    setError('');
+                                }}
+                            />
+                            <button
+                                type="button"
+                                className="password-toggle"
+                                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                            >
+                                {showRegisterPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            </button>
+                        </div>
+
+                        <button type="submit" disabled={resetLoading}>
+                            {resetLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Perbarui Kata Sandi'}
                         </button>
                     </form>
 
