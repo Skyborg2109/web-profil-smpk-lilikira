@@ -140,7 +140,7 @@ export function LoginPage() {
 
             <div className="auth-card">
                 <div className="auth-hero">
-                    <img src="/public/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
+                    <img src="/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
                     <div className={`auth-toggle ${view === 'login' ? 'login-active' : ''}`}>
                         <button type="button" onClick={() => toggleView('login')}>
                             <span> Login </span>

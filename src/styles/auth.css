@@ -116,7 +116,7 @@
     height: 190px;
     width: 94%;
     border-radius: 22px;
-    background: url("/public/auth/image.jpg");
+    background: url("/auth/image.jpg");
     background-position: 0;
     background-size: cover;
     display: flex;
