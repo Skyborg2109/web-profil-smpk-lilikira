@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNews } from '../../contexts/NewsContext';
 import { useSPMB } from '../../contexts/SPMBContext';
+import { useVideos } from '../../contexts/VideoContext';
 import { AdminSidebar } from '../../components/AdminSidebar';
 import {
     Users,
@@ -18,12 +19,14 @@ import {
     ClipboardList,
     LayoutDashboard,
     Menu,
+    Video,
 } from 'lucide-react';
 
 export function DashboardPage() {
     const { user, logout, loading: authLoading } = useAuth();
     const { articles } = useNews();
     const { applications } = useSPMB();
+    const { videos } = useVideos();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -94,15 +97,15 @@ export function DashboardPage() {
                             <div className="hidden sm:block text-right">
                                 <p className="text-sm font-bold text-slate-900 leading-none mb-1">{user?.name.split(' ')[0]}</p>
                                 <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter border ${user?.role === 'admin'
-                                        ? 'text-blue-600 bg-blue-50 border-blue-100'
-                                        : 'text-emerald-600 bg-emerald-50 border-emerald-100'
+                                    ? 'text-blue-600 bg-blue-50 border-blue-100'
+                                    : 'text-emerald-600 bg-emerald-50 border-emerald-100'
                                     }`}>
                                     {user?.role === 'admin' ? 'Administrator' : 'Operator Staff'}
                                 </span>
                             </div>
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white ${user?.role === 'admin'
-                                    ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-blue-200'
-                                    : 'bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-emerald-200'
+                                ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-blue-200'
+                                : 'bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-emerald-200'
                                 }`}>
                                 {user?.name.charAt(0)}
                             </div>
@@ -116,8 +119,8 @@ export function DashboardPage() {
                     <div className="relative overflow-hidden bg-white border border-slate-200 rounded-[2rem] p-6 lg:p-12 shadow-sm">
                         <div className="relative z-10 max-w-2xl">
                             <span className={`inline-block px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-widest mb-4 border ${user?.role === 'admin'
-                                    ? 'bg-blue-50 text-blue-600 border-blue-100'
-                                    : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                ? 'bg-blue-50 text-blue-600 border-blue-100'
+                                : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                 }`}>
                                 {user?.role === 'admin' ? 'System Administrator' : 'Content Operator'} Area
                             </span>
@@ -143,6 +146,13 @@ export function DashboardPage() {
                                 >
                                     <ClipboardList className="w-5 h-5 text-blue-600" />
                                     Cek Pendaftar
+                                </button>
+                                <button
+                                    onClick={() => navigate('/admin/videos')}
+                                    className="flex items-center justify-center gap-2 px-6 py-3.5 bg-amber-50 border-2 border-amber-100 text-amber-700 rounded-2xl font-bold hover:bg-amber-100 transition-all text-sm"
+                                >
+                                    <Video className="w-5 h-5" />
+                                    Kelola Video
                                 </button>
                             </div>
                         </div>
@@ -196,6 +206,17 @@ export function DashboardPage() {
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                                 <h3 className="text-2xl lg:text-3xl font-black text-slate-900">Stable</h3>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 lg:p-6 rounded-3xl border border-slate-200 shadow-sm">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600">
+                                <Video className="w-5 h-5 lg:w-6 lg:h-6" />
+                            </div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Video Dokumentasi</p>
+                            <div className="flex items-baseline gap-2">
+                                <h3 className="text-2xl lg:text-3xl font-black text-slate-900">{videos.length}</h3>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Youtube Links</p>
                             </div>
                         </div>
                     </div>
