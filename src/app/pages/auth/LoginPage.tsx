@@ -26,11 +26,18 @@ export function LoginPage() {
             setView('login');
         }
 
-        // Check for Supabase confirmation (usually in hash or query)
+        // Check for Supabase confirmation in both hash and query params
         const hash = window.location.hash;
-        if (hash && (hash.includes('type=signup') || hash.includes('type=recovery'))) {
-            showAlert.success('Akun Diaktivasi', 'Akun Anda berhasil diaktifkan. Silakan login sekarang.');
-            // Clear hash
+        const params = new URLSearchParams(window.location.search);
+        const isActivation = hash.includes('type=signup') ||
+            hash.includes('type=recovery') ||
+            params.get('type') === 'signup' ||
+            params.get('type') === 'recovery' ||
+            params.get('token');
+
+        if (isActivation) {
+            showAlert.success('Akun Diaktivasi', 'Akun Anda berhasil diverifikasi. Silakan login sekarang.');
+            // Clear hash and params to prevent re-triggering
             window.history.replaceState(null, '', window.location.pathname);
         }
     }, [location.pathname]);
