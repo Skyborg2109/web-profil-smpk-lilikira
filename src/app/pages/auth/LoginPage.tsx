@@ -7,7 +7,7 @@ import { showAlert } from '../../../utils/sweetalert';
 import '../../../styles/auth.css';
 
 export function LoginPage() {
-    const { login, logout, loading: loginLoading } = useAuth();
+    const { login, logout, user, isAuthenticated, loading: authLoading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -45,6 +45,18 @@ export function LoginPage() {
             }
         }
     }, [location.pathname, navigate]);
+
+    // Redirect if already authenticated (especially for OAuth callback)
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            if (user.role === 'student') {
+                navigate('/');
+            } else if (!authLoading) {
+                // If admin logs in through student portal, show error but don't auto-redirect to admin to avoid confusion
+                setError('Akun Anda terdaftar sebagai Admin. Silakan gunakan portal khusus Admin.');
+            }
+        }
+    }, [isAuthenticated, user, authLoading, navigate]);
 
     // Login logic
     const [identifier, setIdentifier] = useState('');
@@ -322,8 +334,8 @@ export function LoginPage() {
 
                         <button type="button" className="auth-link" onClick={() => toggleView('forgot-password')}>Forgot password?</button>
 
-                        <button type="submit" disabled={loginLoading}>
-                            {loginLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Login'}
+                        <button type="submit" disabled={authLoading}>
+                            {authLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Login'}
                         </button>
 
                         <div className="auth-divider">
