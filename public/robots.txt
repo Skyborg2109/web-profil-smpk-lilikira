@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://smpkatoliklilikira.netlify.app/sitemap.xml
