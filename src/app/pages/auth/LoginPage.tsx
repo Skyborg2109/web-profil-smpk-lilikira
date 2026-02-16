@@ -162,6 +162,7 @@ export function LoginPage() {
             }
 
             if (data.user) {
+                console.log('Registration success:', data.user);
                 const isEmailConfirmed = !!data.session;
                 const successTitle = 'Registrasi Berhasil';
                 const successMsg = isEmailConfirmed
@@ -172,9 +173,9 @@ export function LoginPage() {
                     .then(() => {
                         setView('login');
                         window.history.pushState({}, '', '/login');
+                        // Reset form after clicking OK
+                        setFormData({ email: '', password: '', fullName: '', phone: '' });
                     });
-                // Reset form
-                setFormData({ email: '', password: '', fullName: '', phone: '' });
             }
         } catch (err: any) {
             let message = err.message || 'Terjadi kesalahan saat pendaftaran.';
