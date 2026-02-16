@@ -169,8 +169,10 @@ export function LoginPage() {
                     ? 'Akun Anda telah berhasil dibuat. Silakan login sekarang.'
                     : 'Akun berhasil dibuat! Silakan cek inbox email Anda untuk mengeklik link verifikasi sebelum login.';
 
+                console.log('Triggering alert:', successTitle, successMsg);
                 showAlert.success(successTitle, successMsg)
-                    .then(() => {
+                    .then((result) => {
+                        console.log('Alert closed with result:', result);
                         setView('login');
                         window.history.pushState({}, '', '/login');
                         // Reset form after clicking OK

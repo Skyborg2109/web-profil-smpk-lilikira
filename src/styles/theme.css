@@ -213,6 +213,11 @@
   width: 90% !important;
   max-width: 400px !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  z-index: 100001 !important;
+}
+
+.swal2-container {
+  z-index: 100000 !important;
 }
 
 .swal-confirm-btn,
