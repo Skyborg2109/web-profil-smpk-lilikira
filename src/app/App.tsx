@@ -23,6 +23,7 @@ import { KontakPage } from './pages/KontakPage';
 import { LoginPage as AdminLoginPage } from './pages/admin/LoginPage';
 import { LoginPage as UserLoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { NewsManagementPage } from './pages/admin/NewsManagementPage';
 import { GalleryManagementPage } from './pages/admin/GalleryManagementPage';
@@ -113,6 +114,7 @@ export default function App() {
                               <Route path="/profile" element={<PublicLayout><UserProfilePage /></PublicLayout>} />
                               <Route path="/login" element={<UserLoginPage />} />
                               <Route path="/register" element={<UserLoginPage />} />
+                              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                               {/* Fallback Route */}
                               <Route path="*" element={<div className="flex items-center justify-center min-h-screen">404 - Page Not Found</div>} />

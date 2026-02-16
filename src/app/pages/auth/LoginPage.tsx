@@ -11,8 +11,8 @@ export function LoginPage() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // View state: 'login', 'register', 'forgot-password', or 'reset-password'
-    const [view, setView] = useState<'login' | 'register' | 'forgot-password' | 'reset-password'>('login');
+    // View state: 'login', 'register', or 'forgot-password'
+    const [view, setView] = useState<'login' | 'register' | 'forgot-password'>('login');
     const [successMessage, setSuccessMessage] = useState('');
 
     // Password visibility states
@@ -38,15 +38,13 @@ export function LoginPage() {
 
         if (isActivation) {
             if (hash.includes('type=recovery') || params.get('type') === 'recovery') {
-                setView('reset-password');
-                setSuccessMessage('Token pemulihan terdeteksi. Silakan masukkan kata sandi baru Anda.');
+                navigate('/reset-password' + window.location.hash);
             } else {
                 setSuccessMessage('Akun Anda berhasil diverifikasi. Silakan login sekarang.');
+                window.history.replaceState(null, '', window.location.pathname);
             }
-            // Clear hash and params to prevent re-triggering? Actually for recovery we might need the token in the session if not handled by Supabase automatically, but usually Supabase handles it.
-            // window.history.replaceState(null, '', window.location.pathname);
         }
-    }, [location.pathname]);
+    }, [location.pathname, navigate]);
 
     // Login logic
     const [identifier, setIdentifier] = useState('');
@@ -208,7 +206,7 @@ export function LoginPage() {
         setError('');
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                redirectTo: `${window.location.origin}/login`,
+                redirectTo: `${window.location.origin}/reset-password`,
             });
             if (error) throw error;
             setSuccessMessage('Link reset kata sandi telah dikirim ke email Anda.');
@@ -220,38 +218,13 @@ export function LoginPage() {
         }
     };
 
-    const handleUpdatePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newPassword || newPassword.length < 6) {
-            setError('Kata sandi baru minimal 6 karakter.');
-            return;
-        }
-
-        setResetLoading(true);
-        setError('');
-        try {
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
-            if (error) throw error;
-            showAlert.success('Berhasil', 'Kata sandi Anda telah diperbarui. Silakan login kembali.');
-            setView('login');
-            setSuccessMessage('Kata sandi berhasil diperbarui.');
-            setNewPassword('');
-            // Clear hash/params 
-            window.history.replaceState(null, '', window.location.pathname);
-        } catch (err: any) {
-            setError(err.message || 'Gagal memperbarui kata sandi.');
-        } finally {
-            setResetLoading(false);
-        }
-    };
-
-    const toggleView = (target: 'login' | 'register' | 'forgot-password' | 'reset-password') => {
+    const toggleView = (target: 'login' | 'register' | 'forgot-password') => {
         setView(target);
         setError('');
         setSuccessMessage('');
         setShowLoginPassword(false);
         setShowRegisterPassword(false);
-        window.history.pushState({}, '', target === 'login' || target === 'register' ? `/${target}` : window.location.pathname);
+        window.history.pushState({}, '', `/${target === 'forgot-password' ? 'login' : target}`);
     };
 
     return (
@@ -279,11 +252,11 @@ export function LoginPage() {
                     </div>
                 )}
 
-                {(view === 'forgot-password' || view === 'reset-password') && (
+                {(view === 'forgot-password') && (
                     <div className="auth-hero">
                         <img src="/LogoSekolah.png" className="auth-logo-top" alt="Logo Sekolah" />
                         <div className="auth-hero-title">
-                            <h3>{view === 'forgot-password' ? 'Pemulihan Akun' : 'Kata Sandi Baru'}</h3>
+                            <h3>Pemulihan Akun</h3>
                         </div>
                     </div>
                 )}
@@ -373,45 +346,6 @@ export function LoginPage() {
 
                         <button type="button" className="auth-link" onClick={() => toggleView('login')}>
                             Kembali ke Login
-                        </button>
-                    </form>
-
-                    {/* Reset Password Form */}
-                    <form className={`auth-form reset-password ${view === 'reset-password' ? 'active' : ''}`} onSubmit={handleUpdatePassword}>
-                        <h2>Reset Kata Sandi</h2>
-
-                        {successMessage && (
-                            <div className="auth-success">
-                                <div className="success-icon">✓</div>
-                                <div className="success-text">{successMessage}</div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="auth-error">{error}</div>
-                        )}
-
-                        <div className="password-input-wrapper">
-                            <input
-                                type={showRegisterPassword ? "text" : "password"}
-                                placeholder="Kata Sandi Baru"
-                                value={newPassword}
-                                onChange={(e) => {
-                                    setNewPassword(e.target.value);
-                                    setError('');
-                                }}
-                            />
-                            <button
-                                type="button"
-                                className="password-toggle"
-                                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                            >
-                                {showRegisterPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
-
-                        <button type="submit" disabled={resetLoading}>
-                            {resetLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Perbarui Kata Sandi'}
                         </button>
                     </form>
 

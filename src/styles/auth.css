@@ -321,7 +321,7 @@
     box-shadow: 0 0 0 2px var(--color-primary);
 }
 
-.auth-form button {
+.auth-form button:not(.auth-link, .password-toggle) {
     color: #f9f9f9;
     justify-content: center;
     background: var(--color-primary);
@@ -365,9 +365,25 @@
 
 .auth-form .auth-link {
     justify-content: center;
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--color-primary);
     text-decoration: none;
+    background: transparent !important;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 2px 4px !important;
+    margin-top: 4px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    width: fit-content;
+    align-self: center;
+}
+
+.auth-form .auth-link:hover {
+    color: #6a5bcb;
+    text-decoration: underline;
 }
 
 .auth-card p.terms {
