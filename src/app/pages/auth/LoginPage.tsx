@@ -155,7 +155,13 @@ export function LoginPage() {
             }
 
             if (data.user) {
-                showAlert.success('Registrasi Berhasil', 'Akun Anda telah berhasil dibuat. Silakan login sekarang.')
+                const isEmailConfirmed = !!data.session;
+                const successTitle = 'Registrasi Berhasil';
+                const successMsg = isEmailConfirmed
+                    ? 'Akun Anda telah berhasil dibuat. Silakan login sekarang.'
+                    : 'Akun berhasil dibuat! Silakan cek inbox email Anda untuk mengeklik link verifikasi sebelum login.';
+
+                showAlert.success(successTitle, successMsg)
                     .then(() => {
                         setView('login');
                         window.history.pushState({}, '', '/login');
@@ -164,7 +170,13 @@ export function LoginPage() {
                 setFormData({ email: '', password: '', fullName: '', phone: '' });
             }
         } catch (err: any) {
-            setError(err.message);
+            let message = err.message || 'Terjadi kesalahan saat pendaftaran.';
+            if (message.includes('Error sending confirmation email')) {
+                message = 'Gagal mengirim email verifikasi. Akun mungkin sudah terbuat, tapi mohon tunggu beberapa saat (limit Supabase) atau cek folder Spam Anda.';
+            } else if (message.includes('User already registered')) {
+                message = 'Email ini sudah terdaftar. Silakan login atau gunakan email lain.';
+            }
+            setError(message);
         } finally {
             setRegLoading(false);
         }
