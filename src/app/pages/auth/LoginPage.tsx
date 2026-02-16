@@ -13,6 +13,7 @@ export function LoginPage() {
 
     // View state: 'login' or 'register'
     const [view, setView] = useState<'login' | 'register'>('login');
+    const [successMessage, setSuccessMessage] = useState('');
 
     // Password visibility states
     const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -36,7 +37,7 @@ export function LoginPage() {
             params.get('token');
 
         if (isActivation) {
-            showAlert.success('Akun Diaktivasi', 'Akun Anda berhasil diverifikasi. Silakan login sekarang.');
+            setSuccessMessage('Akun Anda berhasil diverifikasi. Silakan login sekarang.');
             // Clear hash and params to prevent re-triggering
             window.history.replaceState(null, '', window.location.pathname);
         }
@@ -164,20 +165,15 @@ export function LoginPage() {
             if (data.user) {
                 console.log('Registration success:', data.user);
                 const isEmailConfirmed = !!data.session;
-                const successTitle = 'Registrasi Berhasil';
-                const successMsg = isEmailConfirmed
+                const msg = isEmailConfirmed
                     ? 'Akun Anda telah berhasil dibuat. Silakan login sekarang.'
-                    : 'Akun berhasil dibuat! Silakan cek inbox email Anda untuk mengeklik link verifikasi sebelum login.';
+                    : 'Registrasi berhasil! Silakan cek inbox email Anda untuk mengeklik link verifikasi sebelum login.';
 
-                console.log('Triggering alert:', successTitle, successMsg);
-                showAlert.success(successTitle, successMsg)
-                    .then((result) => {
-                        console.log('Alert closed with result:', result);
-                        setView('login');
-                        window.history.pushState({}, '', '/login');
-                        // Reset form after clicking OK
-                        setFormData({ email: '', password: '', fullName: '', phone: '' });
-                    });
+                setSuccessMessage(msg);
+                setView('login');
+                window.history.pushState({}, '', '/login');
+                setFormData({ email: '', password: '', fullName: '', phone: '' });
+                setError(''); // clear any previous register errors
             }
         } catch (err: any) {
             let message = err.message || 'Terjadi kesalahan saat pendaftaran.';
@@ -195,6 +191,7 @@ export function LoginPage() {
     const toggleView = (target: 'login' | 'register') => {
         setView(target);
         setError('');
+        setSuccessMessage('');
         setShowLoginPassword(false);
         setShowRegisterPassword(false);
         window.history.pushState({}, '', `/${target}`);
@@ -227,6 +224,13 @@ export function LoginPage() {
                     {/* Login Form */}
                     <form className={`auth-form login ${view === 'login' ? 'active' : ''}`} onSubmit={handleLogin}>
                         <h2>Selamat Datang Kembali!</h2>
+
+                        {successMessage && (
+                            <div className="auth-success">
+                                <div className="success-icon">✓</div>
+                                <div className="success-text">{successMessage}</div>
+                            </div>
+                        )}
 
                         {error && (
                             <div className="auth-error">
@@ -271,6 +275,13 @@ export function LoginPage() {
                     {/* Register Form */}
                     <form className={`auth-form register ${view === 'register' ? 'active' : ''}`} onSubmit={handleRegister}>
                         <h2>Silahkan Melakukan Pendaftaran Akun Disini!</h2>
+
+                        {successMessage && (
+                            <div className="auth-success">
+                                <div className="success-icon">✓</div>
+                                <div className="success-text">{successMessage}</div>
+                            </div>
+                        )}
 
                         {error && (
                             <div className="auth-error">
