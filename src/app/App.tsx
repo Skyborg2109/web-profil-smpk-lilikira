@@ -47,6 +47,8 @@ import { ExtracurricularManagementPage } from './pages/admin/ExtracurricularMana
 import { SpiritualManagementPage } from './pages/admin/SpiritualManagementPage';
 import { RulesManagementPage } from './pages/admin/RulesManagementPage';
 import { StudentProvider } from './contexts/StudentContext';
+import { VideoProvider } from './contexts/VideoContext';
+import { VideoManagementPage } from './pages/admin/VideoManagementPage';
 
 // Layout wrapper for public pages
 function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -72,47 +74,50 @@ export default function App() {
                     <MessageProvider>
                       <DocumentProvider>
                         <StudentProvider>
-                          <Routes>
-                            {/* Admin Routes - No Header/Footer */}
-                            <Route path="/admin/login" element={<AdminLoginPage />} />
-                            <Route path="/admin/dashboard" element={<DashboardPage />} />
-                            <Route path="/admin/news" element={<NewsManagementPage />} />
-                            <Route path="/admin/gallery" element={<GalleryManagementPage />} />
-                            <Route path="/admin/spmb" element={<SPMBManagementPage />} />
-                            <Route path="/admin/content" element={<ContentManagementPage />} />
-                            <Route path="/admin/statistics" element={<StatisticsPage />} />
-                            <Route path="/admin/achievements" element={<AchievementsManagementPage />} />
-                            <Route path="/admin/documents" element={<DocumentsManagementPage />} />
-                            <Route path="/admin/messages" element={<MessagesManagementPage />} />
-                            <Route path="/admin/students" element={<StudentsManagementPage />} />
-                            <Route path="/admin/logs" element={<ActivityLogManagementPage />} />
-                            <Route path="/admin/academic" element={<AcademicManagementPage />} />
-                            <Route path="/admin/org" element={<OrgStructureManagementPage />} />
-                            <Route path="/admin/teachers" element={<TeacherStaffManagementPage />} />
-                            <Route path="/admin/osis" element={<OsisManagementPage />} />
-                            <Route path="/admin/extracurricular" element={<ExtracurricularManagementPage />} />
-                            <Route path="/admin/spiritual" element={<SpiritualManagementPage />} />
-                            <Route path="/admin/rules" element={<RulesManagementPage />} />
+                          <VideoProvider>
+                            <Routes>
+                              {/* Admin Routes - No Header/Footer */}
+                              <Route path="/admin/login" element={<AdminLoginPage />} />
+                              <Route path="/admin/dashboard" element={<DashboardPage />} />
+                              <Route path="/admin/news" element={<NewsManagementPage />} />
+                              <Route path="/admin/gallery" element={<GalleryManagementPage />} />
+                              <Route path="/admin/spmb" element={<SPMBManagementPage />} />
+                              <Route path="/admin/content" element={<ContentManagementPage />} />
+                              <Route path="/admin/statistics" element={<StatisticsPage />} />
+                              <Route path="/admin/achievements" element={<AchievementsManagementPage />} />
+                              <Route path="/admin/documents" element={<DocumentsManagementPage />} />
+                              <Route path="/admin/messages" element={<MessagesManagementPage />} />
+                              <Route path="/admin/students" element={<StudentsManagementPage />} />
+                              <Route path="/admin/logs" element={<ActivityLogManagementPage />} />
+                              <Route path="/admin/academic" element={<AcademicManagementPage />} />
+                              <Route path="/admin/org" element={<OrgStructureManagementPage />} />
+                              <Route path="/admin/teachers" element={<TeacherStaffManagementPage />} />
+                              <Route path="/admin/osis" element={<OsisManagementPage />} />
+                              <Route path="/admin/extracurricular" element={<ExtracurricularManagementPage />} />
+                              <Route path="/admin/spiritual" element={<SpiritualManagementPage />} />
+                              <Route path="/admin/rules" element={<RulesManagementPage />} />
+                              <Route path="/admin/videos" element={<VideoManagementPage />} />
 
-                            {/* Public Routes - With Header/Footer */}
-                            <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
-                            <Route path="/profil" element={<PublicLayout><ProfilPage /></PublicLayout>} />
-                            <Route path="/akademik" element={<PublicLayout><AkademikPage /></PublicLayout>} />
-                            <Route path="/kesiswaan" element={<PublicLayout><KesiswaanPage /></PublicLayout>} />
-                            <Route path="/berita" element={<PublicLayout><BeritaPage /></PublicLayout>} />
-                            <Route path="/berita/:id" element={<PublicLayout><NewsDetailPage /></PublicLayout>} />
-                            <Route path="/prestasi" element={<PublicLayout><PrestasiPage /></PublicLayout>} />
-                            <Route path="/galeri" element={<PublicLayout><GaleriPage /></PublicLayout>} />
-                            <Route path="/spmb" element={<PublicLayout><SPMBPage /></PublicLayout>} />
-                            <Route path="/download" element={<PublicLayout><DownloadPage /></PublicLayout>} />
-                            <Route path="/kontak" element={<PublicLayout><KontakPage /></PublicLayout>} />
-                            <Route path="/profile" element={<PublicLayout><UserProfilePage /></PublicLayout>} />
-                            <Route path="/login" element={<UserLoginPage />} />
-                            <Route path="/register" element={<UserLoginPage />} />
+                              {/* Public Routes - With Header/Footer */}
+                              <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+                              <Route path="/profil" element={<PublicLayout><ProfilPage /></PublicLayout>} />
+                              <Route path="/akademik" element={<PublicLayout><AkademikPage /></PublicLayout>} />
+                              <Route path="/kesiswaan" element={<PublicLayout><KesiswaanPage /></PublicLayout>} />
+                              <Route path="/berita" element={<PublicLayout><BeritaPage /></PublicLayout>} />
+                              <Route path="/berita/:id" element={<PublicLayout><NewsDetailPage /></PublicLayout>} />
+                              <Route path="/prestasi" element={<PublicLayout><PrestasiPage /></PublicLayout>} />
+                              <Route path="/galeri" element={<PublicLayout><GaleriPage /></PublicLayout>} />
+                              <Route path="/spmb" element={<PublicLayout><SPMBPage /></PublicLayout>} />
+                              <Route path="/download" element={<PublicLayout><DownloadPage /></PublicLayout>} />
+                              <Route path="/kontak" element={<PublicLayout><KontakPage /></PublicLayout>} />
+                              <Route path="/profile" element={<PublicLayout><UserProfilePage /></PublicLayout>} />
+                              <Route path="/login" element={<UserLoginPage />} />
+                              <Route path="/register" element={<UserLoginPage />} />
 
-                            {/* Fallback Route */}
-                            <Route path="*" element={<div className="flex items-center justify-center min-h-screen">404 - Page Not Found</div>} />
-                          </Routes>
+                              {/* Fallback Route */}
+                              <Route path="*" element={<div className="flex items-center justify-center min-h-screen">404 - Page Not Found</div>} />
+                            </Routes>
+                          </VideoProvider>
                         </StudentProvider>
                       </DocumentProvider>
                     </MessageProvider>

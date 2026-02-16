@@ -8,6 +8,7 @@ import {
     X,
     BarChart3,
     Image as ImageIcon,
+    Video,
     FolderOpen,
     Settings,
     ChevronDown,
@@ -85,6 +86,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, onLogout }: AdminSid
             items: [
                 { path: '/admin/news', icon: FileText, label: 'Berita & Artikel' },
                 { path: '/admin/gallery', icon: ImageIcon, label: 'Galeri Foto' },
+                { path: '/admin/videos', icon: Video, label: 'Video Dokumentasi' },
                 { path: '/admin/documents', icon: Download, label: 'Pusat Download' },
                 { path: '/admin/messages', icon: Mail, label: 'Kotak Pesan Masuk' },
             ]
