@@ -50,15 +50,7 @@ export function LoginPage() {
     useEffect(() => {
         if (isAuthenticated && user) {
             if (user.role === 'student') {
-                // If it's an OAuth login, we might want to show a specific message
-                // We can check if the session was just created or if it's a redirect from OAuth
-                const isOAuth = window.location.hash.includes('access_token') ||
-                    window.location.search.includes('code=');
-
-                if (isOAuth) {
-                    showAlert.success('Login Berhasil', `Selamat datang, ${user.name}! Anda berhasil masuk menggunakan Google.`);
-                }
-
+                showAlert.success('Login Berhasil', `Selamat datang kembali, ${user.name}!`);
                 navigate('/');
             } else if (!authLoading) {
                 // If admin logs in through student portal, show error but don't auto-redirect to admin to avoid confusion
