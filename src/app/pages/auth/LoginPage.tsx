@@ -39,10 +39,31 @@ export function LoginPage() {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+
+    const handleLoginChange = (field: string, value: string) => {
+        if (field === 'identifier') setIdentifier(value);
+        if (field === 'password') setPassword(value);
+        if (fieldErrors[field]) {
+            setFieldErrors(prev => {
+                const updated = { ...prev };
+                delete updated[field];
+                return updated;
+            });
+        }
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        const errors: { [key: string]: string } = {};
+        if (!identifier) errors.identifier = 'Email wajib diisi';
+        if (!password) errors.password = 'Kata sandi wajib diisi';
+
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors(errors);
+            return;
+        }
 
         try {
             const user = await login(identifier, password);
@@ -52,13 +73,17 @@ export function LoginPage() {
                     navigate('/');
                 } else {
                     await logout();
-                    setError('Akses Ditolak: Silakan login melalui halaman Admin.');
+                    setError('Akses Ditolak: Akun Anda terdaftar sebagai Admin/Operator. Silakan login melalui portal administrasi.');
                 }
-            } else {
-                setError('Login Gagal: Periksa email dan password Anda.');
             }
         } catch (err: any) {
-            setError(err.message || 'Terjadi kesalahan saat login.');
+            let message = err.message || 'Terjadi kesalahan saat login.';
+            if (message === 'Invalid login credentials') {
+                message = 'Email atau kata sandi salah. Silakan periksa kembali.';
+            } else if (message.includes('Email not confirmed')) {
+                message = 'Email belum dikonfirmasi. Silakan cek kotak masuk email Anda.';
+            }
+            setError(message);
         }
     };
 
@@ -70,18 +95,43 @@ export function LoginPage() {
         fullName: '',
         phone: '',
     });
+    const [regErrors, setRegErrors] = useState<{ [key: string]: string }>({});
 
     const handleRegChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
+        if (regErrors[name]) {
+            setRegErrors(prev => {
+                const updated = { ...prev };
+                delete updated[name];
+                return updated;
+            });
+        }
     };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
-        setRegLoading(true);
+        setError('');
+        const errors: { [key: string]: string } = {};
 
+        if (!formData.fullName) errors.fullName = 'Nama lengkap wajib diisi';
+        if (!formData.email) errors.email = 'Email wajib diisi';
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) errors.email = 'Format email tidak valid';
+
+        if (!formData.password) errors.password = 'Kata sandi wajib diisi';
+        else if (formData.password.length < 6) errors.password = 'Kata sandi minimal 6 karakter';
+
+        if (!formData.phone) errors.phone = 'Nomor telepon wajib diisi';
+
+        if (Object.keys(errors).length > 0) {
+            setRegErrors(errors);
+            return;
+        }
+
+        setRegLoading(true);
         try {
             const { data, error } = await supabase.auth.signUp({
                 email: formData.email,
@@ -163,19 +213,21 @@ export function LoginPage() {
                         )}
 
                         <input
-                            required
                             type="email"
                             placeholder="Email"
                             value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
+                            onChange={(e) => handleLoginChange('identifier', e.target.value)}
+                            className={fieldErrors.identifier ? 'error' : ''}
                         />
+                        {fieldErrors.identifier && <span className="field-error">{fieldErrors.identifier}</span>}
+
                         <div className="password-input-wrapper">
                             <input
-                                required
                                 type={showLoginPassword ? "text" : "password"}
                                 placeholder="Password"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => handleLoginChange('password', e.target.value)}
+                                className={fieldErrors.password ? 'error' : ''}
                             />
                             <button
                                 type="button"
@@ -185,6 +237,7 @@ export function LoginPage() {
                                 {showLoginPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                        {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
 
                         <Link to="#" className="auth-link">Forgot password?</Link>
 
@@ -204,29 +257,33 @@ export function LoginPage() {
                         )}
 
                         <input
-                            required
                             type="text"
                             name="fullName"
                             placeholder="Nama Lengkap"
                             value={formData.fullName}
                             onChange={handleRegChange}
+                            className={regErrors.fullName ? 'error' : ''}
                         />
+                        {regErrors.fullName && <span className="field-error">{regErrors.fullName}</span>}
+
                         <input
-                            required
                             type="email"
                             name="email"
                             placeholder="Alamat Email"
                             value={formData.email}
                             onChange={handleRegChange}
+                            className={regErrors.email ? 'error' : ''}
                         />
+                        {regErrors.email && <span className="field-error">{regErrors.email}</span>}
+
                         <div className="password-input-wrapper">
                             <input
-                                required
                                 type={showRegisterPassword ? "text" : "password"}
                                 name="password"
                                 placeholder="Kata Sandi"
                                 value={formData.password}
                                 onChange={handleRegChange}
+                                className={regErrors.password ? 'error' : ''}
                             />
                             <button
                                 type="button"
@@ -236,14 +293,17 @@ export function LoginPage() {
                                 {showRegisterPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>
                         </div>
+                        {regErrors.password && <span className="field-error">{regErrors.password}</span>}
+
                         <input
-                            required
                             type="tel"
                             name="phone"
                             placeholder="Nomor Telepon"
                             value={formData.phone}
                             onChange={handleRegChange}
+                            className={regErrors.phone ? 'error' : ''}
                         />
+                        {regErrors.phone && <span className="field-error">{regErrors.phone}</span>}
 
                         <button type="submit" disabled={regLoading}>
                             {regLoading ? <Loader2 className="animate-spin h-5 w-5" /> : 'Daftar Sekarang'}
