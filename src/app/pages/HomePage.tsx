@@ -144,7 +144,7 @@ export function HomePage() {
                 <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-2 md:mb-4 leading-none tracking-tight">
                   SMP Katolik
                   <br className="hidden sm:block" />
-                  <span className="text-amber-400 drop-shadow-sm">Renya Rosari</span>
+                  <span className="text-amber-400 drop-shadow-sm">Renya Rosari Lili'kira</span>
                 </h1>
 
                 <div className="h-1.5 w-24 bg-gradient-to-r from-amber-400 to-amber-500 mb-6 mx-auto md:mx-0 rounded-full shadow-lg shadow-amber-500/20"></div>
