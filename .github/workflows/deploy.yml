@@ -36,8 +36,8 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./dist/
           server-dir: /domains/pendataanbaranglaravel.my.id/public_html/
-          protocol: ftp
+          protocol: ftps
           port: 21
           security: loose
-          timeout: 60000 # Tambah timeout ke 60 detik
+          timeout: 90000
           state-name: .ftp-deploy-sync-state.json
