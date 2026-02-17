@@ -12,16 +12,15 @@
     align-items: center;
     justify-content: center;
     margin: 0;
-    height: 100vh;
-    width: 100vw;
-    background: url("/Foto Depan Kantor.jpeg") center/cover no-repeat;
+    min-height: 100vh;
+    width: 100%;
+    background: url("/Foto Depan Kantor.jpeg") center/cover no-repeat fixed;
     color: #6a677a;
     font-family: "Poppins", sans-serif;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
+    overflow-y: auto;
+    position: relative;
     z-index: 10;
+    padding: 60px 20px;
 }
 
 .auth-wrapper::before {
