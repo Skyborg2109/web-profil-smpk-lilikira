@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNews, NewsArticle } from '../../contexts/NewsContext';
@@ -18,13 +18,15 @@ import {
     Save,
     XCircle,
     Upload,
+    X,
+    ExternalLink,
     Menu,
 } from 'lucide-react';
 import { showAlert } from '../../../utils/sweetalert';
 
 export function NewsManagementPage() {
     const { user, logout } = useAuth();
-    const { articles, addArticle, updateArticle, deleteArticle } = useNews();
+    const { articles, addArticle, updateArticle, deleteArticle, loading } = useNews();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -155,26 +157,33 @@ export function NewsManagementPage() {
         }
     };
 
-    const handleRemovePhoto = async () => {
-        if (!formData.image) return;
+    const handleRemovePhoto = async (indexOrType: number | 'main' = 'main') => {
+        if (indexOrType === 'main') {
+            if (!formData.image) return;
+            const result = await showAlert.confirm('Hapus Foto Utama', 'Hapus foto utama berita ini?', 'Ya, Hapus', 'Batal', 'warning');
+            if (!result.isConfirmed) return;
 
-        const result = await showAlert.confirm('Hapus Foto', 'Hapus foto berita ini?', 'Ya, Hapus', 'Batal', 'warning');
-        if (!result.isConfirmed) return;
-
-        try {
-            const { deleteFileFromStorage } = await import('../../../utils/storage');
-            await deleteFileFromStorage(formData.image);
-
-            setFormData(prev => ({ ...prev, image: '' }));
-
-            if (editingArticle) {
-                await updateArticle(editingArticle.id, { ...formData, image: '' });
-                showAlert.success('Berhasil', 'Foto telah dihapus.');
-            } else {
-                showAlert.success('Berhasil', 'Foto telah dihapus dari form.');
+            try {
+                const { deleteFileFromStorage } = await import('../../../utils/storage');
+                await deleteFileFromStorage(formData.image);
+                setFormData(prev => ({ ...prev, image: '', images: prev.images.filter(url => url !== prev.image) }));
+                showAlert.success('Berhasil', 'Foto utama dihapus dari form.');
+            } catch (error: any) {
+                showAlert.error('Gagal', 'Gagal menghapus foto: ' + error.message);
             }
-        } catch (error: any) {
-            showAlert.error('Gagal', 'Gagal menghapus foto: ' + error.message);
+        } else {
+            // Remove from images array
+            const imageUrl = formData.images[indexOrType];
+            const result = await showAlert.confirm('Hapus Foto Galeri', 'Hapus foto ini dari galeri?', 'Ya, Hapus', 'Batal', 'warning');
+            if (!result.isConfirmed) return;
+
+            setFormData(prev => ({
+                ...prev,
+                images: prev.images.filter((_, i) => i !== indexOrType),
+                // If it was the main image, clear that too
+                image: prev.image === imageUrl ? (prev.images.find((_, i) => i !== indexOrType) || '') : prev.image
+            }));
+            showAlert.success('Berhasil', 'Foto dihapus dari galeri.');
         }
     };
 
@@ -527,39 +536,85 @@ export function NewsManagementPage() {
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Konten Berita</h3>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Ringkasan *
-                                        </label>
-                                        <textarea
-                                            required
-                                            value={formData.excerpt}
-                                            onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                                            rows={3}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                            placeholder="Ringkasan singkat berita (1-2 kalimat)"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {formData.excerpt.length} karakter
-                                        </p>
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Ringkasan (Excerpt) *
+                                            </label>
+                                            <textarea
+                                                required
+                                                value={formData.excerpt}
+                                                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                                                rows={4}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                                placeholder="Tulis ringkasan singkat berita..."
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Konten Lengkap *
+                                            </label>
+                                            <textarea
+                                                required
+                                                value={formData.content}
+                                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                                rows={12}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                placeholder="Tulis konten lengkap berita di sini. Gunakan baris baru untuk paragraf..."
+                                            />
+                                            <div className="flex justify-between items-center mt-1">
+                                                <p className="text-xs text-gray-500">
+                                                    {formData.content.length} karakter
+                                                </p>
+                                                <span className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">
+                                                    Format: Teks Polos (Plain Text)
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Konten Lengkap *
-                                        </label>
-                                        <textarea
-                                            required
-                                            value={formData.content}
-                                            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                            rows={8}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                            placeholder="Tulis konten lengkap berita di sini..."
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {formData.content.length} karakter
-                                        </p>
-                                    </div>
+                                    {/* Gallery Preview */}
+                                    {(formData.images.length > 0 || imageFiles.length > 0) && (
+                                        <div className="pt-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-4">
+                                                Galeri Gambar ({formData.images.length + imageFiles.length})
+                                            </label>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                                                {/* Existing Images */}
+                                                {formData.images.map((url, idx) => (
+                                                    <div key={`existing-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm">
+                                                        <img src={url} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemovePhoto(idx)}
+                                                                className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition-all transform hover:scale-110"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="absolute top-1 left-1 px-2 py-0.5 bg-blue-500 text-white text-[8px] font-black uppercase rounded">Saved</div>
+                                                    </div>
+                                                ))}
+                                                {/* New Image Files */}
+                                                {imageFiles.map((file, idx) => (
+                                                    <div key={`new-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-amber-200 border-dashed bg-amber-50 shadow-sm animate-pulse">
+                                                        <img src={URL.createObjectURL(file)} alt={`New ${idx}`} className="w-full h-full object-cover opacity-60" />
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setImageFiles(prev => prev.filter((_, i) => i !== idx))}
+                                                                className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 shadow-xl"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                        <div className="absolute top-1 left-1 px-2 py-0.5 bg-amber-500 text-white text-[8px] font-black uppercase rounded">New</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Pengaturan Publikasi */}
@@ -588,22 +643,55 @@ export function NewsManagementPage() {
 
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex items-center gap-3 pt-6 border-t-2 border-gray-200">
-                                    <button
-                                        type="button"
-                                        onClick={resetForm}
-                                        className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-200 transition-colors font-medium border border-gray-300"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-xl"
-                                    >
-                                        <Save className="w-5 h-5" />
-                                        {editingArticle ? 'Simpan Perubahan' : 'Tambah Berita'}
-                                    </button>
+                                {/* Footer Actions */}
+                                <div className="p-8 bg-gray-50 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-gray-100">
+                                    <div className="flex items-center gap-6">
+                                        <label className="relative inline-flex items-center cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.published}
+                                                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-[20px] after:w-[24px] after:transition-all peer-checked:bg-green-500"></div>
+                                            <span className="ml-3 text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors uppercase tracking-widest text-[10px]">
+                                                {formData.published ? 'Publikasikan' : 'Simpan sebagai Draf'}
+                                            </span>
+                                        </label>
+
+                                        {editingArticle && (
+                                            <Link
+                                                to={`/berita/${editingArticle.id}`}
+                                                target="_blank"
+                                                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-black uppercase tracking-widest text-[10px] bg-blue-50 px-4 py-2 rounded-xl transition-all"
+                                            >
+                                                Pratinjau <ExternalLink className="w-4 h-4" />
+                                            </Link>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-3 w-full md:w-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowModal(false);
+                                                setEditingArticle(null);
+                                            }}
+                                            className="flex-1 md:flex-none px-8 py-3 bg-white border-2 border-gray-200 text-gray-600 rounded-2xl hover:bg-gray-50 transition-all font-black uppercase tracking-widest text-[10px]"
+                                        >
+                                            Batal
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className={`flex-1 md:flex-none px-10 py-3 rounded-2xl text-white font-black uppercase tracking-widest text-[10px] shadow-xl transition-all active:scale-95 disabled:bg-gray-400 ${formData.published
+                                                ? 'bg-blue-600 shadow-blue-200 hover:bg-blue-700'
+                                                : 'bg-green-600 shadow-green-200 hover:bg-green-700'
+                                                }`}
+                                        >
+                                            {loading ? 'Menyimpan...' : (editingArticle ? 'Perbarui Berita' : 'Tambah Berita')}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>

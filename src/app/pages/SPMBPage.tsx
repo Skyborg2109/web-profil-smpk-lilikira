@@ -117,68 +117,85 @@ export function SPMBPage() {
       </section>
 
       {/* Syarat Pendaftaran */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <FileText className="w-8 h-8 text-amber-500" />
-                <h2 className="text-3xl text-blue-900">Syarat Pendaftaran</h2>
-              </div>
-              <div className="h-1 w-20 bg-amber-400 mx-auto"></div>
-            </div>
+      <section className="py-24 bg-gray-50 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100 rounded-full blur-3xl opacity-50 -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -ml-32 -mb-32"></div>
 
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <ul className="space-y-4">
-                {requirements.map((req) => (
-                  <li key={req.id} className="flex items-start gap-3">
-                    <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700">{req.description}</span>
-                  </li>
-                ))}
-                {requirements.length === 0 && (
-                  <li className="text-gray-500 italic">Belum ada syarat pendaftaran yang ditambahkan.</li>
-                )}
-              </ul>
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center p-3 bg-amber-100 rounded-2xl mb-4">
+              <FileText className="w-8 h-8 text-amber-600" />
             </div>
+            <h2 className="text-4xl font-black text-blue-900 mb-4 uppercase tracking-tight">Syarat <span className="text-amber-500">Pendaftaran</span></h2>
+            <div className="h-1.5 w-24 bg-amber-400 mx-auto rounded-full"></div>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {requirements.map((req, idx) => (
+              <div key={req.id} className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group">
+                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <span className="font-black text-lg">{idx + 1}</span>
+                </div>
+                <div className="flex items-start gap-4">
+                  <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
+                  <p className="text-slate-700 font-bold leading-relaxed">{req.description}</p>
+                </div>
+              </div>
+            ))}
+            {requirements.length === 0 && (
+              <div className="col-span-full text-center py-16 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-sm italic">Syarat pendaftaran belum tersedia.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Timeline */}
-      <section className="py-16 bg-white">
+      <section className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <Calendar className="w-8 h-8 text-amber-500" />
-                <h2 className="text-3xl text-blue-900">Jadwal SPMB</h2>
-              </div>
-              <div className="h-1 w-20 bg-amber-400 mx-auto"></div>
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-2xl mb-4">
+              <Calendar className="w-8 h-8 text-blue-600" />
             </div>
+            <h2 className="text-4xl font-black text-blue-900 mb-4 uppercase tracking-tight">Jadwal <span className="text-amber-500">SPMB</span></h2>
+            <div className="h-1.5 w-24 bg-amber-400 mx-auto rounded-full"></div>
+            <p className="mt-6 text-slate-500 font-medium">Ikuti tahapan seleksi sesuai jadwal yang telah ditentukan</p>
+          </div>
 
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-blue-200"></div>
+          <div className="relative max-w-5xl mx-auto mt-16">
+            {/* Timeline Vertical Line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-slate-100 -translate-x-1/2 hidden md:block"></div>
 
-              {/* Timeline Items */}
-              <div className="space-y-8">
-                {schedules.filter(s => s.is_active).map((item, index) => (
-                  <div key={item.id} className="relative flex items-start gap-6">
-                    <div className="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center text-white z-10 flex-shrink-0">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1 bg-white p-6 rounded-lg shadow-lg">
-                      <div className="text-amber-500 mb-2">{item.date_range}</div>
-                      <h3 className="text-xl text-blue-900">{item.event_name}</h3>
-                      {item.description && <p className="text-gray-600 mt-2 text-sm">{item.description}</p>}
+            <div className="space-y-12 md:space-y-0">
+              {schedules.filter(s => s.is_active).map((item, index) => (
+                <div key={item.id} className={`flex flex-col md:flex-row items-center gap-8 md:gap-0 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                  {/* Content */}
+                  <div className="w-full md:w-[45%]">
+                    <div className={`p-8 bg-white rounded-[2.5rem] shadow-2xl transition-all duration-500 hover:shadow-amber-100/50 border border-slate-50 relative group ${index % 2 === 0 ? 'md:text-right' : 'md:text-left'}`}>
+                      <div className={`text-amber-500 font-black uppercase tracking-widest text-xs mb-3 flex items-center gap-2 ${index % 2 === 0 ? 'md:justify-end' : 'md:justify-start'}`}>
+                        <Calendar className="w-4 h-4" />
+                        {item.date_range}
+                      </div>
+                      <h3 className="text-2xl font-black text-blue-900 mb-3 uppercase tracking-tight group-hover:text-amber-500 transition-colors">{item.event_name}</h3>
+                      {item.description && <p className="text-slate-600 font-medium leading-relaxed">{item.description}</p>}
                     </div>
                   </div>
-                ))}
-                {schedules.filter(s => s.is_active).length === 0 && (
-                  <p className="text-center text-gray-500 italic py-8">Jadwal belum tersedia.</p>
-                )}
-              </div>
+
+                  {/* Circle Indicator */}
+                  <div className="relative z-10 w-16 h-16 bg-blue-900 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-blue-900/40 font-black text-xl border-4 border-white transform md:scale-110">
+                    {index + 1}
+                  </div>
+
+                  {/* Space for the other side */}
+                  <div className="hidden md:block w-[45%]"></div>
+                </div>
+              ))}
+              {schedules.filter(s => s.is_active).length === 0 && (
+                <div className="text-center py-20 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
+                  <p className="text-slate-400 font-bold uppercase tracking-widest">Jadwal belum tersedia.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
