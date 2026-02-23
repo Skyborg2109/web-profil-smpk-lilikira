@@ -74,7 +74,7 @@ export function AdminSidebar({ sidebarOpen, setSidebarOpen, onLogout }: AdminSid
             group: 'Kesiswaan & SPMB',
             items: [
                 { path: '/admin/spmb', icon: FolderOpen, label: 'Pendaftaran SPMB' },
-                { path: '/admin/students', icon: User, label: 'Database Siswa', adminOnly: true },
+                { path: '/admin/students', icon: User, label: 'Database Siswa' },
                 { path: '/admin/osis', icon: Users, label: 'Organisasi OSIS' },
                 { path: '/admin/extracurricular', icon: Trophy, label: 'Ekstrakurikuler' },
                 { path: '/admin/spiritual', icon: Heart, label: 'Kegiatan Rohani' },

@@ -171,7 +171,13 @@ CREATE POLICY "Allow authenticated users full access to videos" ON public.videos
 
 -- Students
 DROP POLICY IF EXISTS "Only authenticated users can view/manage students" ON public.students;
-CREATE POLICY "Only authenticated users can view/manage students" ON public.students FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow admin and operator access to students" ON public.students FOR ALL USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles 
+    WHERE id = auth.uid() 
+    AND role IN ('admin', 'operator')
+  )
+);
 
 -- Activity Logs
 DROP POLICY IF EXISTS "Only authenticated users can view/manage activity_logs" ON public.activity_logs;
