@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pendataanbaranglaravel.my.id/sitemap.xml
+Sitemap: https://smpkatoliklilikira.netlify.app/sitemap.xml
